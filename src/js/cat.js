@@ -68,8 +68,8 @@ class Cat {
       orange: "🐱",
       calico: "🐈",
       white: "🤍",
-      black: "🐈‍⬛",
-      tabby: "🐯",
+      black: "��‍⬛",
+      tabby: "assets/cats/tabby-cat-1.png", // Use actual image for tabby
       sesame: "🦁",
     };
     return icons[this.color] || "🐱";
@@ -97,9 +97,14 @@ class Cat {
     this.element.className = `cat ${this.state}`;
     this.element.dataset.catId = this.id;
 
+    // Check if icon is an image path or emoji
+    const iconContent = this.icon.includes(".png")
+      ? `<img src="${this.icon}" alt="${this.color} cat" class="cat-image">`
+      : this.icon;
+
     this.element.innerHTML = `
             <div class="cat-needs"></div>
-            <div class="cat-icon">${this.icon}</div>
+            <div class="cat-icon">${iconContent}</div>
             <div class="cat-name">${this.name}</div>
             <div class="cat-hearts">
                 ${"❤️".repeat(this.hearts)}${"🤍".repeat(3 - this.hearts)}
