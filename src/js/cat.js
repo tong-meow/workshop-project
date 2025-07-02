@@ -10,6 +10,7 @@ class Cat {
     this.element = null;
     this.position = { x: 0, y: 0 };
     this.state = "happy"; // happy, stressed, sick, urgent
+    this.arrivalTime = Date.now(); // Track when cat arrived
 
     // Cat appearance
     this.color = this.getRandomColor();
@@ -75,17 +76,29 @@ class Cat {
   }
 
   /**
-   * Generate random needs for the cat
+   * Generate random needs for the cat (1-3 needs as per requirements)
    */
   generateRandomNeeds() {
-    const possibleNeeds = ["hunger", "thirst", "illness", "sadness"];
-    const numNeeds = Math.floor(Math.random() * 3) + 1; // 1-3 needs
+    // Use the NeedManager to generate random needs
+    this.needs = NeedManager.generateRandomNeeds();
 
-    // Shuffle and pick random needs
-    const shuffled = possibleNeeds.sort(() => 0.5 - Math.random());
-    this.needs = shuffled.slice(0, numNeeds);
+    console.log(
+      `🎲 ${this.name} generated ${this.needs.length} needs: ${this.needs.join(
+        ", "
+      )}`
+    );
 
     this.updateNeedDisplay();
+    this.updateState();
+  }
+
+  /**
+   * Get random number of needs (1-3) with weighted distribution
+   * 50% chance of 1 need, 35% chance of 2 needs, 15% chance of 3 needs
+   * (Now delegated to NeedManager)
+   */
+  getRandomNeedCount() {
+    return NeedManager.getRandomNeedCount();
   }
 
   /**
@@ -93,7 +106,7 @@ class Cat {
    */
   createElement() {
     this.element = document.createElement("div");
-    this.element.className = `cat ${this.state}`;
+    this.element.className = `cat ${this.state} arriving`;
     this.element.dataset.catId = this.id;
 
     // Check if icon is an image path or emoji
@@ -109,6 +122,11 @@ class Cat {
                 ${"❤️".repeat(this.hearts)}${"🤍".repeat(3 - this.hearts)}
             </div>
         `;
+
+    // Remove arriving animation after it completes
+    setTimeout(() => {
+      this.element.classList.remove("arriving");
+    }, 600);
 
     // Add click event listener
     this.element.addEventListener("click", () => {
@@ -137,13 +155,7 @@ class Cat {
    * Get icon for specific need type
    */
   getNeedIcon(need) {
-    const icons = {
-      hunger: "🍽️",
-      thirst: "💧",
-      illness: "🏥",
-      sadness: "😢",
-    };
-    return icons[need] || "❓";
+    return NeedManager.getNeedIcon(need);
   }
 
   /**
@@ -190,15 +202,21 @@ class Cat {
   }
 
   /**
-   * Update cat's emotional state
+   * Update cat's emotional state based on needs and time
    */
   updateState() {
     const oldState = this.state;
+    const needCount = this.needs.length;
+    const timeSinceArrival = Date.now() - this.arrivalTime;
+    const minutesSinceArrival = timeSinceArrival / (1000 * 60);
 
-    if (this.needs.length === 0) {
+    // Determine state based on needs and time
+    if (needCount === 0) {
       this.state = "happy";
-    } else if (this.needs.length >= 3) {
+    } else if (needCount >= 3 || this.needs.includes("illness")) {
       this.state = "urgent";
+    } else if (needCount >= 2 || minutesSinceArrival > 2) {
+      this.state = "stressed";
     } else if (this.needs.includes("illness")) {
       this.state = "sick";
     } else {
@@ -208,6 +226,7 @@ class Cat {
     // Update visual state if changed
     if (oldState !== this.state) {
       this.element.className = `cat ${this.state}`;
+      console.log(`😸 ${this.name} is now ${this.state} (${needCount} needs)`);
     }
   }
 
@@ -252,7 +271,60 @@ class Cat {
   }
 
   /**
-   * Get cat info for debugging
+   * Add a new need to the cat (for dynamic gameplay)
+   */
+  addNeed(needType) {
+    if (!this.needs.includes(needType)) {
+      this.needs.push(needType);
+      this.updateNeedDisplay();
+      this.updateState();
+      console.log(`➕ ${this.name} developed ${needType} need`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get time since cat arrived (for urgency calculations)
+   */
+  getTimeSinceArrival() {
+    return Date.now() - this.arrivalTime;
+  }
+
+  /**
+   * Get cat's urgency level (0-1, where 1 is most urgent)
+   */
+  getUrgencyLevel() {
+    const needCount = this.needs.length;
+    const timeSinceArrival = this.getTimeSinceArrival() / (1000 * 60); // minutes
+
+    // Base urgency from need count
+    let urgency = needCount / 3; // 0-1 based on needs
+
+    // Add time pressure
+    urgency += Math.min(timeSinceArrival / 5, 0.5); // Up to 0.5 from time (5 minutes max)
+
+    // Illness is always urgent
+    if (this.needs.includes("illness")) {
+      urgency = Math.max(urgency, 0.8);
+    }
+
+    return Math.min(urgency, 1);
+  }
+
+  /**
+   * Check if cat is in critical condition
+   */
+  isCritical() {
+    return (
+      this.hearts <= 1 ||
+      this.state === "urgent" ||
+      this.getUrgencyLevel() > 0.8
+    );
+  }
+
+  /**
+   * Get detailed cat info for debugging and UI
    */
   getInfo() {
     return {
@@ -262,6 +334,9 @@ class Cat {
       needs: this.needs,
       hearts: this.hearts,
       state: this.state,
+      urgency: this.getUrgencyLevel(),
+      timeSinceArrival: Math.round(this.getTimeSinceArrival() / 1000), // seconds
+      isCritical: this.isCritical(),
     };
   }
 }

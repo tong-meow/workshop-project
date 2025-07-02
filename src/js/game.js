@@ -7,6 +7,8 @@ class KittyShelterGame {
     this.nextCatId = 1;
     this.catsHelped = 0;
     this.isGameRunning = false;
+    this.maxCats = 8; // Maximum cats on screen
+    this.arrivalTimer = null; // Timer for cat arrivals
 
     // DOM elements
     this.catsContainer = document.getElementById("cats-container");
@@ -33,30 +35,67 @@ class KittyShelterGame {
     // Start the game
     this.isGameRunning = true;
 
-    console.log("✅ Game initialized successfully!");
+    // Start automatic cat arrivals
+    this.startCatArrivals();
 
-    // Add some demo cats for testing
-    this.addDemoCats();
+    console.log("✅ Game initialized successfully!");
   }
 
   /**
-   * Add demo cats for testing the UI
+   * Start automatic cat arrivals with random timing
    */
-  addDemoCats() {
-    console.log("Adding demo cats for testing...");
+  startCatArrivals() {
+    if (!this.isGameRunning) return;
 
-    // Add 3 demo cats with different needs
-    setTimeout(() => this.addCat(), 500);
-    setTimeout(() => this.addCat(), 1000);
-    setTimeout(() => this.addCat(), 1500);
+    // Schedule next cat arrival (10-30 seconds)
+    const arrivalDelay = Math.random() * 20000 + 10000; // 10-30 seconds in milliseconds
+
+    this.arrivalTimer = setTimeout(() => {
+      if (this.cats.size < this.maxCats) {
+        this.addCat();
+        console.log(
+          `⏰ Next cat will arrive in ${Math.round(
+            arrivalDelay / 1000
+          )} seconds`
+        );
+      } else {
+        console.log("🏠 Shelter is full! Waiting for space...");
+      }
+
+      // Schedule next arrival
+      this.startCatArrivals();
+    }, arrivalDelay);
+
+    console.log(
+      `⏰ Next cat will arrive in ${Math.round(arrivalDelay / 1000)} seconds`
+    );
+  }
+
+  /**
+   * Stop automatic cat arrivals
+   */
+  stopCatArrivals() {
+    if (this.arrivalTimer) {
+      clearTimeout(this.arrivalTimer);
+      this.arrivalTimer = null;
+    }
   }
 
   /**
    * Add a new cat to the shelter
    */
   addCat(name = null) {
+    // Check if shelter is full
+    if (this.cats.size >= this.maxCats) {
+      console.log("🏠 Shelter is full! Cannot add more cats.");
+      return null;
+    }
+
     const cat = new Cat(this.nextCatId++, name);
     this.cats.set(cat.id, cat);
+
+    // Position the cat to avoid overlap
+    this.positionCat(cat);
 
     // Add to DOM
     this.catsContainer.appendChild(cat.element);
@@ -72,6 +111,16 @@ class KittyShelterGame {
   }
 
   /**
+   * Position a cat to avoid overlap with existing cats
+   */
+  positionCat(cat) {
+    // CSS Grid handles positioning automatically
+    // The 'arriving' CSS class provides the visual animation
+
+    console.log(`📍 Positioning ${cat.name} in the shelter`);
+  }
+
+  /**
    * Remove a cat from the shelter
    */
   removeCat(catId) {
@@ -82,6 +131,8 @@ class KittyShelterGame {
       this.updateUI();
 
       console.log(`👋 ${cat.name} left the shelter`);
+
+      // If shelter was full, this creates space for new arrivals
       return true;
     }
     return false;
@@ -123,7 +174,7 @@ class KittyShelterGame {
 
     // Log current state
     console.log(
-      `📊 Game State: ${this.cats.size} active cats, ${this.catsHelped} cats helped`
+      `📊 Game State: ${this.cats.size}/${this.maxCats} cats, ${this.catsHelped} cats helped`
     );
   }
 
@@ -154,7 +205,7 @@ class KittyShelterGame {
   addTestCat(needs = null, name = null) {
     const cat = this.addCat(name);
 
-    if (needs) {
+    if (cat && needs) {
       cat.needs = Array.isArray(needs) ? needs : [needs];
       cat.updateNeedDisplay();
       cat.updateState();
@@ -199,15 +250,37 @@ class KittyShelterGame {
   }
 
   /**
-   * Debug function to log game state
+   * Pause/Resume the game
+   */
+  pauseGame() {
+    this.isGameRunning = false;
+    this.stopCatArrivals();
+    console.log("⏸️ Game paused");
+  }
+
+  resumeGame() {
+    this.isGameRunning = true;
+    this.startCatArrivals();
+    console.log("▶️ Game resumed");
+  }
+
+  /**
+   * Debug functions for testing
    */
   debug() {
-    console.log("🐛 Game Debug Info:");
-    console.log(
-      "Cats:",
-      Array.from(this.cats.values()).map((cat) => cat.getInfo())
-    );
-    console.log("Stats:", this.getStats());
+    console.log("🔧 Debug Mode Activated");
+    console.log("Available commands:");
+    console.log("- game.addTestCat(['hunger', 'thirst'], 'TestCat')");
+    console.log("- game.clearAllCats()");
+    console.log("- game.pauseGame() / game.resumeGame()");
+    console.log("- game.getStats()");
+    console.log(`- Current cats: ${this.cats.size}/${this.maxCats}`);
+
+    // Add some test cats for immediate testing
+    console.log("Adding test cats...");
+    this.addTestCat(["hunger"], "Hungry Cat");
+    this.addTestCat(["thirst", "sadness"], "Thirsty Cat");
+    this.addTestCat(["illness"], "Sick Cat");
   }
 }
 
