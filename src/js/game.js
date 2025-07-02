@@ -9,6 +9,7 @@ class KittyShelterGame {
     this.isGameRunning = false;
     this.maxCats = 8; // Maximum cats on screen
     this.arrivalTimer = null; // Timer for cat arrivals
+    this.inventory = null; // Inventory manager
 
     // DOM elements
     this.catsContainer = document.getElementById("cats-container");
@@ -24,9 +25,17 @@ class KittyShelterGame {
   init() {
     console.log("🐱 Kitty Shelter Game Starting...");
 
+    // Initialize inventory system
+    this.inventory = new InventoryManager();
+
     // Listen for cat click events
     document.addEventListener("catClicked", (event) => {
       this.handleCatClick(event.detail.cat);
+    });
+
+    // Listen for need fulfillment events
+    document.addEventListener("needFulfilled", (event) => {
+      this.handleNeedFulfillment(event.detail);
     });
 
     // Update UI
@@ -161,9 +170,100 @@ class KittyShelterGame {
   handleCatClick(cat) {
     console.log(`🖱️ Player clicked on ${cat.name}`);
 
-    // For now, just show cat info
-    // Later this will be used for need fulfillment
-    this.showCatInfo(cat);
+    // If inventory item is selected, the inventory will handle fulfillment
+    // Otherwise, show cat info for debugging
+    if (!this.inventory.getSelectedItem()) {
+      this.showCatInfo(cat);
+    }
+  }
+
+  /**
+   * Handle need fulfillment events from inventory
+   */
+  handleNeedFulfillment(details) {
+    const { cat, needType, item } = details;
+
+    console.log(
+      `✅ Need fulfilled: ${cat.name}'s ${needType} with ${item.name}`
+    );
+
+    // Check if cat has no more needs
+    if (cat.needs.length === 0) {
+      this.handleHappyCat(cat);
+    }
+
+    // Update game statistics
+    this.updateUI();
+  }
+
+  /**
+   * Handle when a cat becomes happy (all needs fulfilled)
+   */
+  handleHappyCat(cat) {
+    console.log(`😸 ${cat.name} is now happy with all needs fulfilled!`);
+
+    // Add visual celebration effect
+    this.showCelebration(cat);
+
+    // Cat could potentially be adopted now (future feature)
+    // For now, just keep them happy in the shelter
+  }
+
+  /**
+   * Show celebration effect for happy cats
+   */
+  showCelebration(cat) {
+    // Add celebration class for animation
+    cat.element.classList.add("celebrating");
+
+    // Create celebration particles
+    this.createCelebrationParticles(cat.element);
+
+    // Remove celebration class after animation
+    setTimeout(() => {
+      cat.element.classList.remove("celebrating");
+    }, 2000);
+  }
+
+  /**
+   * Create celebration particle effects
+   */
+  createCelebrationParticles(catElement) {
+    const particles = ["🎉", "✨", "💖", "🌟"];
+    const rect = catElement.getBoundingClientRect();
+
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        const particle = document.createElement("div");
+        particle.className = "celebration-particle";
+        particle.textContent =
+          particles[Math.floor(Math.random() * particles.length)];
+        particle.style.position = "fixed";
+        particle.style.left = `${
+          rect.left + rect.width / 2 + (Math.random() - 0.5) * 100
+        }px`;
+        particle.style.top = `${rect.top + rect.height / 2}px`;
+        particle.style.zIndex = "1000";
+        particle.style.fontSize = "20px";
+        particle.style.pointerEvents = "none";
+
+        document.body.appendChild(particle);
+
+        // Animate particle
+        particle.style.transition = "all 2s ease-out";
+        setTimeout(() => {
+          particle.style.transform = `translateY(-100px) scale(0)`;
+          particle.style.opacity = "0";
+        }, 50);
+
+        // Remove particle
+        setTimeout(() => {
+          if (particle.parentNode) {
+            particle.parentNode.removeChild(particle);
+          }
+        }, 2100);
+      }, i * 200);
+    }
   }
 
   /**
@@ -291,6 +391,8 @@ class KittyShelterGame {
     console.log("- game.clearAllCats()");
     console.log("- game.pauseGame() / game.resumeGame()");
     console.log("- game.getStats()");
+    console.log("- game.inventory.selectItem('food') - Select inventory item");
+    console.log("- game.inventory.deselectItem() - Deselect item");
     console.log(`- Current cats: ${this.cats.size}/${this.maxCats}`);
 
     // Add some test cats for immediate testing

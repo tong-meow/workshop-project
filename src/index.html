@@ -6,6 +6,7 @@
     <title>Kitty Shelter Game</title>
     <link rel="stylesheet" href="styles/main.css" />
     <link rel="stylesheet" href="styles/cats.css" />
+    <link rel="stylesheet" href="styles/inventory.css" />
   </head>
   <body>
     <div class="game-container">
@@ -30,7 +31,10 @@
       </footer>
     </div>
 
+    <!-- Inventory will be added here by JavaScript -->
+
     <script src="js/needs.js"></script>
+    <script src="js/inventory.js"></script>
     <script src="js/cat.js"></script>
     <script src="js/game.js"></script>
     <script>
@@ -42,9 +46,10 @@
         // Make game available globally for debugging
         window.game = game;
 
-        console.log(
-          '🎮 Game loaded! Type "game.debug()" in console for testing commands.'
-        );
+        console.log("🎮 Game loaded! Try these commands:");
+        console.log("- Select items from inventory at bottom");
+        console.log("- Click cats to fulfill their needs");
+        console.log('- Type "game.debug()" for more commands');
       });
     </script>
   </body>
