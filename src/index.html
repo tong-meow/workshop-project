@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kitty Shelter Game</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <link rel="stylesheet" href="styles/cats.css" />
+  </head>
+  <body>
+    <div class="game-container">
+      <header class="game-header">
+        <h1>🐱 Kitty Shelter Game</h1>
+        <p>Help the cats find their forever homes!</p>
+      </header>
+
+      <main class="game-area">
+        <div class="shelter-background">
+          <div id="cats-container" class="cats-container">
+            <!-- Cats will be dynamically added here -->
+          </div>
+        </div>
+      </main>
+
+      <footer class="game-footer">
+        <div class="game-stats">
+          <span>Cats Helped: <span id="cats-helped">0</span></span>
+          <span>Active Cats: <span id="active-cats">0</span></span>
+        </div>
+      </footer>
+    </div>
+
+    <script src="js/cat.js"></script>
+    <script src="js/game.js"></script>
+  </body>
+</html>
