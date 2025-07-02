@@ -128,10 +128,13 @@ class Cat {
       this.element.classList.remove("arriving");
     }, 600);
 
-    // Add click event listener
+    // Setup click handler and drag/drop
     this.element.addEventListener("click", () => {
-      this.onCatClick();
+      this.handleClick();
     });
+
+    // Setup drag and drop handlers for receiving inventory items
+    this.setupDragAndDrop();
   }
 
   /**
@@ -159,18 +162,10 @@ class Cat {
   }
 
   /**
-   * Handle cat click event
+   * Handle cat click events
    */
-  onCatClick() {
-    console.log(`${this.name} was clicked! Needs: ${this.needs.join(", ")}`);
-
-    // Add visual feedback
-    this.element.style.transform = "scale(1.1)";
-    setTimeout(() => {
-      this.element.style.transform = "";
-    }, 200);
-
-    // Trigger custom event for game to handle
+  handleClick() {
+    // Dispatch custom event for game to handle
     const event = new CustomEvent("catClicked", {
       detail: { cat: this },
     });
@@ -338,5 +333,54 @@ class Cat {
       timeSinceArrival: Math.round(this.getTimeSinceArrival() / 1000), // seconds
       isCritical: this.isCritical(),
     };
+  }
+
+  /**
+   * Setup drag and drop handlers for receiving inventory items
+   */
+  setupDragAndDrop() {
+    this.element.addEventListener("dragover", (event) => {
+      event.preventDefault(); // Allow drop
+      event.dataTransfer.dropEffect = "copy";
+
+      // Add visual feedback
+      this.element.classList.add("drag-over");
+    });
+
+    this.element.addEventListener("dragleave", (event) => {
+      // Remove visual feedback
+      this.element.classList.remove("drag-over");
+    });
+
+    this.element.addEventListener("drop", (event) => {
+      event.preventDefault();
+
+      // Remove visual feedback
+      this.element.classList.remove("drag-over");
+
+      // Get dropped item data
+      try {
+        const itemData = JSON.parse(
+          event.dataTransfer.getData("application/json")
+        );
+        this.handleItemDrop(itemData);
+      } catch (error) {
+        console.log("❌ Invalid item data dropped");
+      }
+    });
+  }
+
+  /**
+   * Handle item drop on this cat
+   */
+  handleItemDrop(itemData) {
+    console.log(`🎯 ${itemData.name} dropped on ${this.name}`);
+
+    // Get the inventory manager and handle the drop
+    if (window.game && window.game.inventory) {
+      window.game.inventory.handleItemDrop(this, itemData);
+    } else {
+      console.log("❌ Game or inventory not available");
+    }
   }
 }

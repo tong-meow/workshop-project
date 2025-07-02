@@ -1,6 +1,6 @@
 /**
  * Inventory System - Kitty Shelter Game
- * Manages items, selection, and need fulfillment
+ * Manages items, selection, and need fulfillment with drag and drop
  */
 
 /**
@@ -46,14 +46,13 @@ const INVENTORY_ITEMS = {
  */
 class InventoryManager {
   constructor() {
-    this.selectedItem = null;
     this.inventoryElement = null;
     this.items = Object.values(INVENTORY_ITEMS);
 
     this.createInventoryUI();
     this.setupEventListeners();
 
-    console.log("🎒 Inventory system initialized");
+    console.log("🎒 Inventory system initialized with drag and drop");
   }
 
   /**
@@ -66,7 +65,7 @@ class InventoryManager {
     this.inventoryElement.innerHTML = `
       <div class="inventory-header">
         <h3>🎒 Inventory</h3>
-        <p class="inventory-hint">Select an item, then click a cat to help!</p>
+        <p class="inventory-hint">Drag items to cats to help them!</p>
       </div>
       <div class="inventory-items">
         ${this.items.map((item) => this.createItemHTML(item)).join("")}
@@ -82,7 +81,7 @@ class InventoryManager {
    */
   createItemHTML(item) {
     return `
-      <div class="inventory-item" data-item-id="${item.id}">
+      <div class="inventory-item" data-item-id="${item.id}" draggable="true">
         <div class="item-icon">${item.icon}</div>
         <div class="item-name">${item.name}</div>
         <div class="item-description">${item.description}</div>
@@ -94,103 +93,82 @@ class InventoryManager {
    * Setup event listeners for inventory interactions
    */
   setupEventListeners() {
-    // Item selection
+    // Drag and drop for inventory items
+    this.inventoryElement.addEventListener("dragstart", (event) => {
+      const itemElement = event.target.closest(".inventory-item");
+      if (itemElement) {
+        const itemId = itemElement.dataset.itemId;
+        const item = this.items.find((i) => i.id === itemId);
+
+        // Store item data for drop
+        event.dataTransfer.setData("application/json", JSON.stringify(item));
+        event.dataTransfer.effectAllowed = "copy";
+
+        // Add visual feedback
+        itemElement.classList.add("dragging");
+        console.log(`🎒 Dragging ${item.name} - drop on a cat to help!`);
+
+        // Update hint
+        this.showDragHint(item);
+      }
+    });
+
+    this.inventoryElement.addEventListener("dragend", (event) => {
+      const itemElement = event.target.closest(".inventory-item");
+      if (itemElement) {
+        itemElement.classList.remove("dragging");
+        this.hideDragHint();
+      }
+    });
+
+    // Legacy click support (for backup/debugging)
     this.inventoryElement.addEventListener("click", (event) => {
       const itemElement = event.target.closest(".inventory-item");
       if (itemElement) {
         const itemId = itemElement.dataset.itemId;
-        this.selectItem(itemId);
-      }
-    });
-
-    // Listen for cat clicks when item is selected
-    document.addEventListener("catClicked", (event) => {
-      if (this.selectedItem) {
-        this.attemptNeedFulfillment(event.detail.cat);
+        console.log(
+          `💡 Tip: Try dragging ${this.getItem(itemId).name} to a cat instead!`
+        );
       }
     });
   }
 
   /**
-   * Select an inventory item
+   * Show drag hint in inventory
    */
-  selectItem(itemId) {
-    const item = this.items.find((i) => i.id === itemId);
-    if (!item) return;
-
-    // Update selected item
-    this.selectedItem = item;
-
-    // Update visual selection
-    this.updateItemSelection();
-
-    // Update cursor/feedback
-    this.updateSelectionFeedback();
-
-    console.log(`🎒 Selected ${item.name} - click a cat to help!`);
-  }
-
-  /**
-   * Update visual selection of inventory items
-   */
-  updateItemSelection() {
-    // Remove previous selection
-    this.inventoryElement.querySelectorAll(".inventory-item").forEach((el) => {
-      el.classList.remove("selected");
-    });
-
-    // Add selection to current item
-    if (this.selectedItem) {
-      const selectedElement = this.inventoryElement.querySelector(
-        `[data-item-id="${this.selectedItem.id}"]`
-      );
-      if (selectedElement) {
-        selectedElement.classList.add("selected");
-      }
-    }
-  }
-
-  /**
-   * Update selection feedback (cursor, hints, etc.)
-   */
-  updateSelectionFeedback() {
+  showDragHint(item) {
     const hintElement = this.inventoryElement.querySelector(".inventory-hint");
-
-    if (this.selectedItem) {
-      hintElement.textContent = `${this.selectedItem.icon} ${this.selectedItem.name} selected - click a cat with ${this.selectedItem.fulfills}!`;
-      hintElement.className = "inventory-hint active";
-
-      // Add cursor feedback
-      document.body.classList.add("item-selected");
-      document.body.style.cursor = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><text y="24" font-size="24">${this.selectedItem.icon}</text></svg>'), auto`;
-    } else {
-      hintElement.textContent = "Select an item, then click a cat to help!";
-      hintElement.className = "inventory-hint";
-
-      // Remove cursor feedback
-      document.body.classList.remove("item-selected");
-      document.body.style.cursor = "";
-    }
+    hintElement.textContent = `Dragging ${item.icon} ${item.name} - drop on a cat with ${item.fulfills}!`;
+    hintElement.className = "inventory-hint dragging";
   }
 
   /**
-   * Attempt to fulfill a cat's need with the selected item
+   * Hide drag hint
    */
-  attemptNeedFulfillment(cat) {
-    if (!this.selectedItem) {
-      console.log("❌ No item selected");
+  hideDragHint() {
+    const hintElement = this.inventoryElement.querySelector(".inventory-hint");
+    hintElement.textContent = "Drag items to cats to help them!";
+    hintElement.className = "inventory-hint";
+  }
+
+  /**
+   * Handle item drop on cat (called from cat drop handler)
+   */
+  handleItemDrop(cat, itemData) {
+    if (!itemData) {
+      console.log("❌ No item data in drop");
       return false;
     }
 
-    const needType = this.selectedItem.fulfills;
+    const needType = itemData.fulfills;
 
     // Check if cat has this need
     if (!cat.needs.includes(needType)) {
-      console.log(`❌ ${cat.name} doesn't need ${this.selectedItem.name}`);
+      console.log(`❌ ${cat.name} doesn't need ${itemData.name}`);
       this.showFulfillmentFeedback(
         cat,
         false,
-        `${cat.name} doesn't need ${this.selectedItem.name}`
+        `${cat.name} doesn't need ${itemData.name}`
       );
       return false;
     }
@@ -200,15 +178,12 @@ class InventoryManager {
 
     if (success) {
       console.log(
-        `✅ ${cat.name}'s ${needType} fulfilled with ${this.selectedItem.name}!`
+        `✅ ${cat.name}'s ${needType} fulfilled with ${itemData.name}!`
       );
       this.showFulfillmentFeedback(cat, true, `${cat.name} feels better!`);
 
-      // Deselect item after successful use
-      this.deselectItem();
-
       // Trigger game event
-      this.triggerFulfillmentEvent(cat, needType);
+      this.triggerFulfillmentEvent(cat, needType, itemData);
 
       return true;
     }
@@ -251,33 +226,24 @@ class InventoryManager {
   }
 
   /**
-   * Deselect the current item
-   */
-  deselectItem() {
-    this.selectedItem = null;
-    this.updateItemSelection();
-    this.updateSelectionFeedback();
-  }
-
-  /**
    * Trigger fulfillment event for game to handle
    */
-  triggerFulfillmentEvent(cat, needType) {
+  triggerFulfillmentEvent(cat, needType, itemData) {
     const event = new CustomEvent("needFulfilled", {
       detail: {
         cat: cat,
         needType: needType,
-        item: this.selectedItem,
+        item: itemData,
       },
     });
     document.dispatchEvent(event);
   }
 
   /**
-   * Get selected item info
+   * Get selected item info (returns null for drag and drop)
    */
   getSelectedItem() {
-    return this.selectedItem;
+    return null;
   }
 
   /**

@@ -170,11 +170,8 @@ class KittyShelterGame {
   handleCatClick(cat) {
     console.log(`🖱️ Player clicked on ${cat.name}`);
 
-    // If inventory item is selected, the inventory will handle fulfillment
-    // Otherwise, show cat info for debugging
-    if (!this.inventory.getSelectedItem()) {
-      this.showCatInfo(cat);
-    }
+    // Show cat info for debugging (no more inventory selection needed)
+    this.showCatInfo(cat);
   }
 
   /**
@@ -273,11 +270,11 @@ class KittyShelterGame {
     const info = cat.getInfo();
     console.log("Cat Info:", info);
 
-    // You could add a modal or tooltip here later
-    alert(
-      `Cat: ${info.name}\nColor: ${info.color}\nNeeds: ${info.needs.join(
+    // Log to console instead of showing alert popup
+    console.log(
+      `🐱 ${info.name} (${info.color}) - Needs: ${info.needs.join(
         ", "
-      )}\nHearts: ${info.hearts}/3`
+      )} - Hearts: ${info.hearts}/3`
     );
   }
 

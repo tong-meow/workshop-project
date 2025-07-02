@@ -80,22 +80,11 @@
   border-color: #007bff;
 }
 
-.inventory-item.selected {
-  border-color: #28a745;
-  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
-  animation: selectedPulse 2s infinite;
-}
-
-@keyframes selectedPulse {
-  0%,
-  100% {
-    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
-  }
-  50% {
-    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.5);
-  }
+.inventory-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  border-color: #007bff;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
 }
 
 /* Item icon */
@@ -122,20 +111,7 @@
 
 /* Selection indicator */
 .inventory-item.selected::before {
-  content: "✓";
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: #28a745;
-  color: white;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
+  display: none;
 }
 
 /* Fulfillment feedback */
@@ -197,9 +173,26 @@
   }
 }
 
-/* Item selection cursor */
+/* Drag hint styling */
+.inventory-hint.dragging {
+  color: #007bff;
+  font-weight: bold;
+  animation: dragHintPulse 1.5s infinite;
+}
+
+@keyframes dragHintPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Item selection cursor - updated for drag and drop */
 body.item-selected .cat {
-  cursor: pointer !important;
+  cursor: grab !important;
 }
 
 body.item-selected .cat:hover {
