@@ -56,7 +56,7 @@ class Cat {
    * Get random cat color
    */
   getRandomColor() {
-    const colors = ["orange", "calico", "white", "black", "tabby", "sesame"];
+    const colors = ["orange", "calico", "white", "black", "tabby"];
     return colors[Math.floor(Math.random() * colors.length)];
   }
 
@@ -65,14 +65,13 @@ class Cat {
    */
   getCatIcon() {
     const icons = {
-      orange: "🐱",
-      calico: "🐈",
-      white: "🤍",
-      black: "��‍⬛",
-      tabby: "assets/cats/tabby-cat-1.png", // Use actual image for tabby
-      sesame: "🦁",
+      orange: "assets/cats/orange-cat-1.png",
+      calico: "assets/cats/calico-cat-1.png",
+      white: "assets/cats/white-cat-1.png",
+      black: "assets/cats/black-cat-1.png",
+      tabby: "assets/cats/tabby-cat-1.png",
     };
-    return icons[this.color] || "🐱";
+    return icons[this.color] || "assets/cats/tabby-cat-1.png";
   }
 
   /**
