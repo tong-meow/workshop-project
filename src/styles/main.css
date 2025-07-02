@@ -83,10 +83,12 @@ body {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 25px;
   min-height: 400px;
   padding: 20px;
+  justify-items: center;
+  align-items: start;
 }
 
 /* Footer */

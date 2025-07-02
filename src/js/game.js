@@ -35,10 +35,27 @@ class KittyShelterGame {
     // Start the game
     this.isGameRunning = true;
 
+    // Add initial cats for immediate gameplay
+    this.addInitialCats();
+
     // Start automatic cat arrivals
     this.startCatArrivals();
 
     console.log("✅ Game initialized successfully!");
+  }
+
+  /**
+   * Add initial cats when game starts (3 cats for immediate gameplay)
+   */
+  addInitialCats() {
+    console.log("🐱 Adding initial cats to shelter...");
+
+    // Add 3 initial cats with slight delays for visual effect
+    setTimeout(() => this.addCat(), 100);
+    setTimeout(() => this.addCat(), 300);
+    setTimeout(() => this.addCat(), 500);
+
+    console.log("✅ Initial cats added to shelter");
   }
 
   /**
